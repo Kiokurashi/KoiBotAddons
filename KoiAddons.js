@@ -35,25 +35,32 @@ var dice = [0,0,0,0,0];
 		return count;
 	}
 	
-exports.highdice = {
+exports.kdice = {
 	
 	execute: (command, parameters, message) => {
 		//parameters: bet, dice_number
-		//Winnings multiplier:  0 die = 0%, 1 die = 50%, 2 = 150%, 3 = 225%, 4 = 400%, 5 = 650%
-		var bet = parameters[0];
-		var diceNum = parameters[1];
-		var count = parseDice(diceNum);
 		if (!this.ffs.publish("economy.hasBalance", { userId: message.userId, amount: bet }) ) {
 			this.api.say(`You do not have enough to bet that.`);
 			return;
 		}
 		
-
-
-
-
-		this.api.say(`There were ${count} dice with the number ${diceNum}.`);
+		rollDice(); //first version didn't ever actually throw the dice :blobsweat:
+		var bet = parameters[0];
+		var diceNum = parameters[1];
+		var count = parseDice(diceNum);
+		//Winnings multiplier:  0 die = 0%, 1 die = 50%, 2 = 150%, 3 = 225%, 4 = 400%, 5 = 650%
+		this.api.say(`There were ${count} dice with the number ${diceNum}. Your roll: ${dice[0]}, ${dice[1]}, ${dice[2]}, ${dice[3]}, ${dice[4]}.`); 
 		
+		var prizes = [1, 0.5, 0.5, 1.25, 3, 5.5];
+		if (count == 0 || count == 1) {
+			this.ffs.publish("economy.decrementBalance", { userId: message.userId, amount: (bet * prizes[count]) });
+			this.api.say(`You did not get enough dice to win. You lose ${(bet * prizes[count])}.`);
+			return;
+		} else if (count <= 5) {
+			this.ffs.publish("economy.incrementBalance", { userId: message.userId, amount: (bet * prizes[count]) });
+			this.api.say(`You got enough dice to win! You win ${(bet * prizes[count])}.`);
+			return;
+		}
+			
 	}
-	
 }
