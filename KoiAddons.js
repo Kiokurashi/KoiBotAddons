@@ -52,13 +52,17 @@ exports.kdice = {
 		this.api.say(`There were ${count} dice with the number ${diceNum}. Your roll: ${dice[0]}, ${dice[1]}, ${dice[2]}, ${dice[3]}, ${dice[4]}.`); 
 		
 		var prizes = [1, 0.5, 0.5, 1.25, 3, 5.5];
-		if (count == 0 || count == 1) {
-			this.ffs.publish("economy.decrementBalance", { userId: message.userId, amount: (bet * prizes[count]) });
-			this.api.say(`You did not get enough dice to win. You lose ${(bet * prizes[count])}.`);
+		if (count == 0 || count == 1) { // lose money.
+			var prize = (bet * prizes[count]);
+			this.ffs.publish("economy.decrementBalance", { userId: message.userId, amount: prize});
+			prize = this.ffs.publish("economy.currency.format", { userId: message.userId, amount: prize });//
+			this.api.say(`You did not get enough dice to win. You lose ${prize}.`);
 			return;
-		} else if (count <= 5) {
-			this.ffs.publish("economy.incrementBalance", { userId: message.userId, amount: (bet * prizes[count]) });
-			this.api.say(`You got enough dice to win! You win ${(bet * prizes[count])}.`);
+		} else if (count <= 5) {        // win money.
+			var prize = (bet * prizes[count]);
+			this.ffs.publish("economy.incrementBalance", { userId: message.userId, amount: prize });
+			prize = this.ffs.publish("economy.currency.format", { userId: message.userId, amount: prize });//
+			this.api.say(`You got enough dice to win! You win ${prize}.`);
 			return;
 		}
 			
